@@ -24,26 +24,51 @@ cart_raw = read_csv("./data/DataAnalyst_Ecom_data_addsToCart.csv")
 summary(sessions_raw)
 summary(cart_raw)
 
-# Change dim_date to date object
+# ----- sessions_raw -----
+# Change sessions_raw$dim_date to date object
 sessions_raw$dim_date = as.Date(sessions_raw$dim_date, format = "%m/%d/%y")
 
-# Change column names
-names(sessions_raw) = c("Browser", "Device Category", "Date", "Sessions", "Transactions", "QTY")
-sessions_raw$"Device Category" = toTitleCase(sessions_raw$"Device Category")
+# Create year and month columns for sessions_raw
+sessions_raw$Year = format(as.Date(sessions_raw$dim_date, format = "%m/%d/%Y"),"%Y")
+sessions_raw$Month = format(as.Date(sessions_raw$dim_date, format = "%m/%d/%Y"),"%m")
+sessions_raw$Date = as.Date(paste(sessions_raw$Year, sessions_raw$Month, 01), "%Y %m %d")
+
+# Delete unnecessary columns in sessions_raw
+sessions_raw = within(sessions_raw, rm(dim_date, Year, Month))
+
+# Move sessions_raw$Date to first position
+sessions_raw = sessions_raw %>%
+  select(Date, everything())
+
+# Change column names in sessions_raw
+names(sessions_raw) = c("Date", "Browser", "Device Category", "Sessions", "Transactions", "QTY")
+sessions_raw$`Device Category` = toTitleCase(sessions_raw$"Device Category")
 
 
-# Month*Device Aggregation
+# ----- cart_raw -----
+# Create date column in cart_raw
+cart_raw$Date = as.Date(paste(cart_raw$dim_year, cart_raw$dim_month, 01), "%Y %m %d")
+
+# Delete cart_raw$dim_year and cart_raw$dim_month
+cart_raw = within(cart_raw, rm(dim_year, dim_month))
+
+# Move cart_raw$Date to first position
+cart_raw = cart_raw %>%
+  select(Date, everything())
+
+# Change column names in sessions_raw
+names(cart_raw) = c("Date", "Adds To Cart")
+
+
+# Sheet 1: Month*Device Aggregation
 # --------------------------------------------------
 
 # Subset sessions_raw
-df_MD = sessions_raw[c("Device Category", "Date", "Sessions", "Transactions", "QTY")]
-
-# Change date to month
-df_MD = df_MD %>% mutate(Date = floor_date(as_date(Date)))
+df_MD = sessions_raw[c("Date", "Device Category", "Sessions", "Transactions", "QTY")]
 
 # Group by month
-df_MD = sessions_raw %>%
-  group_by(df_MD$"Device Category", Date) %>%
+df_MD = df_MD %>%
+  group_by(Date, `Device Category`) %>%
   summarize(
     "Total Sessions" = sum(Sessions), 
     "Total Transactions" = sum(Transactions), 
@@ -53,13 +78,32 @@ df_MD = sessions_raw %>%
 # Order by date
 df_MD = df_MD[order(df_MD$"Date"), ]
 
-
 # Add ECR column
-df_MD$ECR = df_MD$total_transactions/df_MD$total_sessions
+df_MD$ECR = df_MD$`Total Transactions`/df_MD$`Total Sessions`
 df_MD$ECR = format(round(df_MD$ECR,4), nsmall = 4)
 
-df_MD
 
+# Sheet 2: Month over Month
+# --------------------------------------------------
+
+# Subset cart_raw
+df_MM = cart_raw[c("Date", "Adds To Cart")]
+df_MM
+
+# In order to combine df_MD and df_MM, we must regroup df_MD only by date
+
+df_MD2 = sessions_raw[c("Date", "Sessions", "Transactions", "QTY")]
+df_MD2
+
+df_MD2 = df_MD2 %>% mutate(Date = floor_date(as_date(Date)))
+df_MD2 = df_MD2 %>%
+  group_by(Date) %>%
+  summarize(
+    "Total Sessions" = sum(Sessions), 
+    "Total Transactions" = sum(Transactions), 
+    "Total QTY" = sum(QTY)
+  )
+df_MD2
 
 
 wb = createWorkbook("wb_Sessions_Car")

@@ -88,14 +88,9 @@ df_MD$ECR = format(round(df_MD$ECR,4), nsmall = 4)
 
 # Subset cart_raw
 df_MM = cart_raw[c("Date", "Adds To Cart")]
-df_MM
 
 # In order to combine df_MD and df_MM, we must regroup df_MD only by date
-
 df_MD2 = sessions_raw[c("Date", "Sessions", "Transactions", "QTY")]
-df_MD2
-
-df_MD2 = df_MD2 %>% mutate(Date = floor_date(as_date(Date)))
 df_MD2 = df_MD2 %>%
   group_by(Date) %>%
   summarize(
@@ -103,12 +98,27 @@ df_MD2 = df_MD2 %>%
     "Total Transactions" = sum(Transactions), 
     "Total QTY" = sum(QTY)
   )
-df_MD2
+
+# Merge df_MM and df_MD2
+df_MD_MM = merge(df_MD2, df_MM)
+df_MD_MM
 
 
+
+
+
+# Create workbook
 wb = createWorkbook("wb_Sessions_Car")
+
+# Add Sheet 1
 addWorksheet(wb, "Sessions", gridLines = TRUE)
 setColWidths(wb, "Sessions", cols = 1:6, widths = 15)
 writeData(wb, sheet = "Sessions", df_MD, colNames = TRUE, rowNames = FALSE)
+
+# Add Sheet 2
+addWorksheet(wb, "Cart", gridLines = TRUE)
+setColWidths(wb, "Cart", cols = 1:6, widths = 15)
+
+# Save Workbook
 saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)
 

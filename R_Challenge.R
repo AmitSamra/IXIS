@@ -9,24 +9,44 @@ library(openxlsx)
 
 # Load CSVs
 # --------------------------------------------------
-df_Sessions = read_csv("./data/DataAnalyst_Ecom_data_sessionCounts.csv")
-View(df_Sessions)
 
-df_Cart = read_csv("./data/DataAnalyst_Ecom_data_addsToCart.csv")
-View(df_Cart)
+sessions_raw = read_csv("./data/DataAnalyst_Ecom_data_sessionCounts.csv")
+View(sessions_raw)
+
+cart_raw = read_csv("./data/DataAnalyst_Ecom_data_addsToCart.csv")
+View(cart_raw)
+
 
 # Clean Data
 # --------------------------------------------------
 
 # Check data types
-summary(df_Sessions)
+summary(sessions_raw)
+summary(cart_raw)
 
 # Change dim_date to date object
-df_Sessions$dim_date = as.Date(df_Sessions$dim_date, format = "%m/%d/%Y")
+sessions_raw$dim_date = as.Date(sessions_raw$dim_date, format = "%m/%d/%y")
+
 
 # Month*Device Aggregation
+# --------------------------------------------------
 
-df_MD = df_Session
+# Subset sessions_raw
+df_MD = sessions_raw[c("dim_deviceCategory", "dim_date", "sessions", "transactions", "QTY")]
+
+# Group by month
+df_MD = sessions_raw %>%
+  group_by(dim_date) %>%
+  summarize(
+    total_sessions = sum(sessions), 
+    total_transactions = sum(transactions), 
+    total_QTY = sum(QTY)
+    )
+
+# Add ECR column
+df_MD$ECR = df_MD$total_transactions/df_MD$total_sessions
+
+df_MD
 
 
 

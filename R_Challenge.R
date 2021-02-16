@@ -5,6 +5,7 @@ library(ggplot2)
 library(corrplot)
 library(scales)
 library(ggrepel)
+library(lubridate)
 library(openxlsx)
 
 # Load CSVs
@@ -36,7 +37,7 @@ df_MD = sessions_raw[c("dim_deviceCategory", "dim_date", "sessions", "transactio
 
 # Group by month
 df_MD = sessions_raw %>%
-  group_by(dim_date) %>%
+  group_by(month=floor_date(dim_date, "year/month")) %>%
   summarize(
     total_sessions = sum(sessions), 
     total_transactions = sum(transactions), 
@@ -45,6 +46,7 @@ df_MD = sessions_raw %>%
 
 # Add ECR column
 df_MD$ECR = df_MD$total_transactions/df_MD$total_sessions
+df_MD$ECR = format(round(df_MD$ECR,4), nsmall = 4)
 
 df_MD
 

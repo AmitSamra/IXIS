@@ -51,15 +51,9 @@ df_MD$ECR = format(round(df_MD$ECR,4), nsmall = 4)
 df_MD
 
 
-
-
-
-
-
-
-
-
 wb = createWorkbook("wb_Sessions_Car")
-addWorksheet(wb, "Sessions")
+addWorksheet(wb, "Sessions", gridLines = TRUE)
+setColWidths(wb, "Sessions", cols = 2:6, widths = 15)
+writeData(wb, sheet = "Sessions", df_MD, colNames = TRUE, rowNames = FALSE)
 saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)
 

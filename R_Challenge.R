@@ -44,7 +44,6 @@ sessions_raw = sessions_raw %>%
 names(sessions_raw) = c("Date", "Browser", "Device Category", "Sessions", "Transactions", "QTY")
 sessions_raw$`Device Category` = toTitleCase(sessions_raw$"Device Category")
 
-
 # ----- cart_raw -----
 # Create date column in cart_raw
 cart_raw$Date = as.Date(paste(cart_raw$dim_year, cart_raw$dim_month, 01), "%Y %m %d")
@@ -56,7 +55,7 @@ cart_raw = within(cart_raw, rm(dim_year, dim_month))
 cart_raw = cart_raw %>%
   select(Date, everything())
 
-# Change column names in sessions_raw
+# Change column names in cart_raw
 names(cart_raw) = c("Date", "Adds To Cart")
 
 
@@ -101,11 +100,23 @@ df_MD2 = df_MD2 %>%
 
 # Merge df_MM and df_MD2
 df_MD_MM = merge(df_MD2, df_MM)
+
+# Calculate differences
+df_MD_MM$`Sessions Change` = df_MD_MM$`Total Sessions` - lag(df_MD_MM$`Total Sessions`)
+df_MD_MM$`Sessions % Change` = df_MD_MM$`Total Sessions` / lag(df_MD_MM$`Total Sessions`) -1
+df_MD_MM$`Transactions Change` = df_MD_MM$`Total Transactions` - lag(df_MD_MM$`Total Transactions`)
+df_MD_MM$`Transactions % Change` = df_MD_MM$`Total Transactions` / lag(df_MD_MM$`Total Transactions`) -1
+df_MD_MM$`QTY Change` = df_MD_MM$`Total QTY` - lag(df_MD_MM$`Total QTY`)
+df_MD_MM$`QTY % Change` = df_MD_MM$`Total QTY` / lag(df_MD_MM$`Total QTY`) -1
+df_MD_MM$`Cart Change` = df_MD_MM$`Adds To Cart` - lag(df_MD_MM$`Adds To Cart`)
+df_MD_MM$`Cart % Change` = df_MD_MM$`Adds To Cart` / lag(df_MD_MM$`Adds To Cart`) -1
+
+df_MD_MM$`Sessions % Change` = format(round(df_MD_MM$`Sessions % Change`,2), nsmall = 2)
+df_MD_MM$`Transactions % Change` = format(round(df_MD_MM$`Transactions % Change`,2), nsmall = 2)
+df_MD_MM$`QTY % Change` = format(round(df_MD_MM$`QTY % Change`,2), nsmall = 2)
+df_MD_MM$`Cart % Change` = format(round(df_MD_MM$`Cart % Change`,2), nsmall = 2)
+
 df_MD_MM
-
-
-
-
 
 # Create workbook
 wb = createWorkbook("wb_Sessions_Car")
@@ -117,7 +128,8 @@ writeData(wb, sheet = "Sessions", df_MD, colNames = TRUE, rowNames = FALSE)
 
 # Add Sheet 2
 addWorksheet(wb, "Cart", gridLines = TRUE)
-setColWidths(wb, "Cart", cols = 1:6, widths = 15)
+setColWidths(wb, "Cart", cols = 1:13, widths = 15)
+writeData(wb, sheet = "Cart", df_MD_MM, colNames = TRUE, rowNames = FALSE)
 
 # Save Workbook
 saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)

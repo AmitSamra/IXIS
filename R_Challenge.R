@@ -56,7 +56,7 @@ cart_raw = cart_raw %>%
   select(Date, everything())
 
 # Change column names in cart_raw
-names(cart_raw) = c("Date", "Adds To Cart")
+names(cart_raw) = c("Date", "Add To Carts")
 
 
 # Sheet 1: Month*Device Aggregation
@@ -86,7 +86,7 @@ df_MD$ECR = format(round(df_MD$ECR,4), nsmall = 4)
 # --------------------------------------------------
 
 # Subset cart_raw
-df_MM = cart_raw[c("Date", "Adds To Cart")]
+df_MM = cart_raw[c("Date", "Add To Carts")]
 
 # In order to combine df_MD and df_MM, we must regroup df_MD only by date
 df_MD2 = sessions_raw[c("Date", "Sessions", "Transactions", "QTY")]
@@ -108,8 +108,8 @@ df_MD_MM$`Transactions Change` = df_MD_MM$`Total Transactions` - lag(df_MD_MM$`T
 df_MD_MM$`Transactions % Change` = df_MD_MM$`Total Transactions` / lag(df_MD_MM$`Total Transactions`) -1
 df_MD_MM$`QTY Change` = df_MD_MM$`Total QTY` - lag(df_MD_MM$`Total QTY`)
 df_MD_MM$`QTY % Change` = df_MD_MM$`Total QTY` / lag(df_MD_MM$`Total QTY`) -1
-df_MD_MM$`Cart Change` = df_MD_MM$`Adds To Cart` - lag(df_MD_MM$`Adds To Cart`)
-df_MD_MM$`Cart % Change` = df_MD_MM$`Adds To Cart` / lag(df_MD_MM$`Adds To Cart`) -1
+df_MD_MM$`Cart Change` = df_MD_MM$`Add To Carts` - lag(df_MD_MM$`Add To Carts`)
+df_MD_MM$`Cart % Change` = df_MD_MM$`Add To Carts` / lag(df_MD_MM$`Add To Carts`) -1
 
 # Round decimals
 df_MD_MM$`Sessions % Change` = format(round(df_MD_MM$`Sessions % Change`,2), nsmall = 2)
@@ -145,24 +145,49 @@ saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)
 df_MD
 df_MD_MM
 
+# Plot Total Sessions
 df_MD %>%
   ggplot( aes(x = Date, y = df_MD$`Total Sessions`, group = df_MD$`Device Category`, color = df_MD$`Device Category` ) ) + 
   geom_line() +
-  labs(x='Date', y='Total Sessions', color='Device Category') +
-  ggtitle('Total Sessions') +
+  labs(x='Date', y='Total Sessions', color='Device Category', title='Total Sessions') +
   scale_x_date(breaks = "1 month", date_labels = "%y %b") +
-  scale_y_continuous() +
+  scale_y_continuous(breaks=scales::breaks_extended(n=10), labels=comma)  +
   scale_color_manual(values=c("red2", "steelblue", "green4"))
 
 
-
+# Plot ECR
 df_MD %>%
   ggplot( aes(x = Date, y = df_MD$`ECR`, group = df_MD$`Device Category`, color = df_MD$`Device Category` ) ) + 
   geom_line() +
-  labs(x='Date', y='ECR', color='Device Category') +
-  ggtitle('ECR') +
+  labs(x='Date', y='ECR', color='Device Category', title='ECR') +
   scale_x_date(breaks = "1 month", date_labels = "%y %b") +
   scale_color_manual(values=c("red2", "steelblue", "green4"))
+
+
+# Plot Sessions & Transactions
+
+# Rename columns for binding
+df_S = df_MD_MM[c("Date", "Total Sessions")]
+names(df_S) = c("Date", "Total")
+df_T = df_MD_MM[c("Date", "Total Transactions")]
+names(df_T) = c("Date", "Total")
+df_C = df_MD_MM[c("Date", "Add To Carts")]
+names(df_C) = c("Date", "Total")
+
+# Bind dataframes
+df_S_T = dplyr::bind_rows(df_S, df_T, df_C, .id='id')
+
+df_S_T %>%
+  ggplot(aes(x=`Date`, y=`Total`, fill=id)) +
+  geom_bar(stat='identity') +
+  scale_y_continuous(breaks=scales::breaks_extended(n=10), labels=comma) +
+  geom_text(hjust=.5, vjust=-3, size=3, aes(label=comma(`Total`))) +
+  scale_fill_manual(labels=c('Sessions', 'Add to Carts', 'Transactions'), values=c('aquamarine4', 'aquamarine3', 'powderblue')) +
+  labs(title='Sessions, Add to Carts, Transactions', x='Date', y='Total', fill='Key') +
+  scale_x_date(breaks = "1 month", date_labels = "%y %b")
+
+
+
 
 
 

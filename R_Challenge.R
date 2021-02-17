@@ -138,7 +138,6 @@ writeData(wb, sheet = "Cart", df_MD_MM, colNames = TRUE, rowNames = FALSE)
 saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)
 
 
-
 # Visualizations
 # --------------------------------------------------
 
@@ -146,12 +145,21 @@ saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)
 df_MD
 df_MD_MM
 
+df_MD %>%
+  ggplot( aes(x = Date, y = df_MD$`Total Sessions`, group = df_MD$`Device Category`, color = df_MD$`Device Category` ) ) + 
+  geom_line() +
+  labs(x='Date', y='Total Sessions', color='Device Category') +
+  ggtitle('Total Sessions') +
+  scale_x_date(breaks = "1 month", date_labels = "%y %b") +
+  scale_y_continuous() +
+  scale_color_manual(values=c("red2", "steelblue", "green4"))
+
+
 
 df_MD %>%
   ggplot( aes(x = Date, y = df_MD$`ECR`, group = df_MD$`Device Category`, color = df_MD$`Device Category` ) ) + 
   geom_line() +
-  xlab('Date') +
-  ylab('ECR') +
+  labs(x='Date', y='ECR', color='Device Category') +
   ggtitle('ECR') +
   scale_x_date(breaks = "1 month", date_labels = "%y %b") +
   scale_color_manual(values=c("red2", "steelblue", "green4"))

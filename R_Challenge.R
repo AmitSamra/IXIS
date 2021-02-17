@@ -111,12 +111,15 @@ df_MD_MM$`QTY % Change` = df_MD_MM$`Total QTY` / lag(df_MD_MM$`Total QTY`) -1
 df_MD_MM$`Cart Change` = df_MD_MM$`Adds To Cart` - lag(df_MD_MM$`Adds To Cart`)
 df_MD_MM$`Cart % Change` = df_MD_MM$`Adds To Cart` / lag(df_MD_MM$`Adds To Cart`) -1
 
+# Round decimals
 df_MD_MM$`Sessions % Change` = format(round(df_MD_MM$`Sessions % Change`,2), nsmall = 2)
 df_MD_MM$`Transactions % Change` = format(round(df_MD_MM$`Transactions % Change`,2), nsmall = 2)
 df_MD_MM$`QTY % Change` = format(round(df_MD_MM$`QTY % Change`,2), nsmall = 2)
 df_MD_MM$`Cart % Change` = format(round(df_MD_MM$`Cart % Change`,2), nsmall = 2)
 
-df_MD_MM
+
+# Export XLSX Workbook
+# --------------------------------------------------
 
 # Create workbook
 wb = createWorkbook("wb_Sessions_Car")
@@ -133,4 +136,26 @@ writeData(wb, sheet = "Cart", df_MD_MM, colNames = TRUE, rowNames = FALSE)
 
 # Save Workbook
 saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)
+
+
+
+# Visualizations
+# --------------------------------------------------
+
+
+df_MD
+df_MD_MM
+
+
+df_MD %>%
+  ggplot( aes(x = Date, y = df_MD$`ECR`, group = df_MD$`Device Category`, color = df_MD$`Device Category` ) ) + 
+  geom_line() +
+  xlab('Date') +
+  ylab('ECR') +
+  ggtitle('ECR') +
+  scale_x_date(breaks = "1 month", date_labels = "%y %b") +
+  scale_color_manual(values=c("red2", "steelblue", "green4"))
+
+
+
 

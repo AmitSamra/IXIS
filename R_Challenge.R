@@ -82,7 +82,8 @@ df_MD = df_MD[order(df_MD$"Date"), ]
 df_MD$ECR = df_MD$`Total Transactions`/df_MD$`Total Sessions`
 df_MD$ECR = format(round(df_MD$ECR,4), nsmall = 4)
 df_MD$ECR = as.numeric(df_MD$ECR)
-df_MD
+
+
 # Sheet 2: Month over Month
 # --------------------------------------------------
 

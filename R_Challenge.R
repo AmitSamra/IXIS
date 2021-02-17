@@ -6,6 +6,7 @@ library(ggplot2)
 library(corrplot)
 library(scales)
 library(ggrepel)
+library(tidyr)
 library(lubridate)
 library(openxlsx)
 
@@ -80,8 +81,8 @@ df_MD = df_MD[order(df_MD$"Date"), ]
 # Add ECR column
 df_MD$ECR = df_MD$`Total Transactions`/df_MD$`Total Sessions`
 df_MD$ECR = format(round(df_MD$ECR,4), nsmall = 4)
-
-
+df_MD$ECR = as.numeric(df_MD$ECR)
+df_MD
 # Sheet 2: Month over Month
 # --------------------------------------------------
 
@@ -161,11 +162,12 @@ df_MD %>%
   geom_line() +
   labs(x='Date', y='ECR', color='Device Category', title='ECR') +
   scale_x_date(breaks = "1 month", date_labels = "%y %b") +
-  scale_color_manual(values=c("red2", "steelblue", "green4"))
+  scale_color_manual(values=c("red2", "steelblue", "green4")) +
+  geom_text(hjust=0, vjust=-1, size=3, aes(label=round(df_MD$`ECR`, digits = 3))) +
+  scale_y_continuous(breaks=scales::breaks_extended(n=10), labels=comma)
 
 
 # Plot Sessions & Transactions
-
 # Rename columns for binding
 df_S = df_MD_MM[c("Date", "Total Sessions")]
 names(df_S) = c("Date", "Total")
@@ -182,13 +184,23 @@ df_S_T %>%
   geom_bar(stat='identity') +
   scale_y_continuous(breaks=scales::breaks_extended(n=10), labels=comma) +
   geom_text(hjust=.5, vjust=-3, size=3, aes(label=comma(`Total`))) +
-  scale_fill_manual(labels=c('Sessions', 'Add to Carts', 'Transactions'), values=c('aquamarine4', 'aquamarine3', 'powderblue')) +
+  scale_fill_manual(labels=c('Sessions', 'Add to Carts', 'Transactions'), values=c('aquamarine4', 'aquamarine3', 'lightblue3')) +
   labs(title='Sessions, Add to Carts, Transactions', x='Date', y='Total', fill='Key') +
   scale_x_date(breaks = "1 month", date_labels = "%y %b")
 
 
-
-
-
-
-
+# Plot Transactions & Total QTY
+# Bind dataframes
+df_Trans = df_MD_MM[c("Date", "Total Transactions")]
+names(df_Trans) = c("Date", "Total")
+df_QTY = df_MD_MM[c("Date", "Total QTY")]
+names(df_QTY) = c("Date", "Total")
+df_Trans_QTY = dplyr::bind_rows(df_Trans, df_QTY, .id='id')
+  
+df_Trans_QTY %>%
+  ggplot(aes(x=`Date`, y=`Total`, fill=id))+
+  geom_bar(stat="identity", position="dodge") +
+  scale_y_continuous(breaks=scales::breaks_extended(n=10), labels=comma) +
+  scale_x_date(breaks = "1 month", date_labels = "%y %b") +
+  labs(x='Date', y='Total', color='Key', title='Transactions & QTY', fill='Key') +
+  scale_fill_manual(labels=c('Transactions', 'QTY'), values=c('aquamarine4', 'lightblue3'))

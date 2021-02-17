@@ -142,10 +142,6 @@ saveWorkbook(wb, "R_Challenge.xlsx", overwrite = TRUE)
 # Visualizations
 # --------------------------------------------------
 
-
-df_MD
-df_MD_MM
-
 # Plot Total Sessions
 df_MD %>%
   ggplot( aes(x = Date, y = df_MD$`Total Sessions`, group = df_MD$`Device Category`, color = df_MD$`Device Category` ) ) + 
@@ -154,6 +150,8 @@ df_MD %>%
   scale_x_date(breaks = "1 month", date_labels = "%y %b") +
   scale_y_continuous(breaks=scales::breaks_extended(n=10), labels=comma)  +
   scale_color_manual(values=c("red2", "steelblue", "green4"))
+
+ggsave('sessions.png', device='png', path='img')
 
 
 # Plot ECR
@@ -166,6 +164,7 @@ df_MD %>%
   geom_text(hjust=0, vjust=-1, size=3, aes(label=round(df_MD$`ECR`, digits = 3))) +
   scale_y_continuous(breaks=scales::breaks_extended(n=10), labels=comma)
 
+ggsave('ECR.png', device='png', path='img')
 
 # Plot Sessions & Transactions
 # Rename columns for binding
@@ -188,6 +187,7 @@ df_S_T %>%
   labs(title='Sessions, Add to Carts, Transactions', x='Date', y='Total', fill='Key') +
   scale_x_date(breaks = "1 month", date_labels = "%y %b")
 
+ggsave('sessions_carts_transactions.png', device='png', path='img')
 
 # Plot Transactions & Total QTY
 # Bind dataframes
@@ -204,3 +204,5 @@ df_Trans_QTY %>%
   scale_x_date(breaks = "1 month", date_labels = "%y %b") +
   labs(x='Date', y='Total', color='Key', title='Transactions & QTY', fill='Key') +
   scale_fill_manual(labels=c('Transactions', 'QTY'), values=c('aquamarine4', 'lightblue3'))
+
+ggsave('transactions_QTY.png', device='png', path='img')
